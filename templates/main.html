@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/highcharts.js"></script>
+</head>
+<body>
+<div id="container" style="min-width:400px;height:400px"></div>
+<button id="reloadCurrentPlayers">刷新</button>
+<script>
+var chart = null;
+function getHistoryData() {
+    $.ajax({
+    type:"GET",
+    url:"/logic/intime_online_person",
+    data:{"type":"historyData"},
+    success: function (data) {
+        var req = JSON.parse(data);
+    console.log(req.resp.historyData);
+    chart = Highcharts.chart('container', {
+        chart: {
+            zoomType: 'x'
+        },
+        title: {
+            text: '实时在线人数'
+        },
+        subtitle: {
+            text: document.ontouchstart === undefined ?
+            '鼠标拖动可以进行缩放' : '手势操作进行缩放'
+        },
+        xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: {
+                millisecond: '%H:%M:%S.%L',
+                second: '%H:%M:%S',
+                minute: '%H:%M',
+                hour: '%H:%M',
+                day: '%m-%d',
+                week: '%m-%d',
+                month: '%Y-%m',
+                year: '%Y'
+            }
+        },
+        tooltip: {
+            dateTimeLabelFormats: {
+                millisecond: '%H:%M:%S.%L',
+                second: '%H:%M:%S',
+                minute: '%H:%M',
+                hour: '%H:%M',
+                day: '%Y-%m-%d',
+                week: '%m-%d',
+                month: '%Y-%m',
+                year: '%Y'
+            }
+        },
+        yAxis: {
+            title: {
+                text: '人数'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            area: {
+                fillColor: {
+                    linearGradient: {
+                        x1: 0,
+                        y1: 0,
+                        x2: 0,
+                        y2: 1
+                    },
+                    stops: [
+                        [0, Highcharts.getOptions().colors[0]],
+                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                    ]
+                },
+                marker: {
+                    radius: 2
+                },
+                lineWidth: 1,
+                states: {
+                    hover: {
+                        lineWidth: 1
+                    }
+                },
+                threshold: null
+            }
+        },
+        series: [{
+            type: 'area',
+            name: '当前在线玩家',
+            data: req.resp.historyData
+        }]
+    });
+}
+});
+}
+getHistoryData();
+$("#reloadCurrentPlayers").on('click', function () {
+    console.log('gaga');
+    getHistoryData();
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+部署过程：uwsgi nginx
+1.django目录中创建ini文件，并进行测试运行。
+2.创建##_nginx.conf文件配置监听端口，和Nginx与uwsgi的端口（亦可以通过其他方式）。文件放在conf.d中。
+3.启动uwsgi和Nginx（自启）

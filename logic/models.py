@@ -104,6 +104,13 @@ class Players(models.Model):
                 }
                 result = cls.objects.create(**insert_plyers)
                 print(result)
+                ## 发送到DA
+                if club:
+                    club_id = club.get('club_id', '')
+                    player['club_id'] = club_id
+                player['is_admin'] = is_admin
+
+                ##
                 req = cls.objects.get(account_id=account_id)
         return req
 

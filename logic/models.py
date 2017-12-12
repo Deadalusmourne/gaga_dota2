@@ -4,6 +4,7 @@ import requests
 from init_doAPI import get_doAPI
 import json
 import pycountry
+from analysis import data_handler, da_config
 # Create your models here.
 
 
@@ -109,7 +110,8 @@ class Players(models.Model):
                     club_id = club.get('club_id', '')
                     player['club_id'] = club_id
                 player['is_admin'] = is_admin
-
+                # 待考虑的roll back
+                data_handler.fast_write(da_config.DB_LOGIC, player, 'players')
                 ##
                 req = cls.objects.get(account_id=account_id)
         return req

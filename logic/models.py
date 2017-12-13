@@ -82,7 +82,7 @@ class Players(models.Model):
 
 
     @classmethod
-    def get_or_create(cls, account_id, club='', is_admin=0):
+    def get_or_create(cls, account_id, club='', is_admin=0, club_id=''):
         print('get_or_create')
         req = cls.objects.filter(account_id=account_id)
         if not req:
@@ -95,7 +95,6 @@ class Players(models.Model):
                 insert_plyers = {
                     'account_id': account_id,
                     'steamid': player.get('steamid', ''),
-                    'steacommunityvisibilitystatemid': player.get('communityvisibilitystate', ''),
                     'lastlogoff': player.get('lastlogoff', ''),
                     'avatar': player.get('avatar', ''),
                     'avatarmedium': player.get('avatarmedium', ''),
@@ -103,12 +102,11 @@ class Players(models.Model):
                     'club': club,
                     'is_admin': is_admin
                 }
+                if not club: insert_plyers.pop('club')
                 result = cls.objects.create(**insert_plyers)
                 print(result)
                 ## 发送到DA
-                if club:
-                    club_id = club.get('club_id', '')
-                    player['club_id'] = club_id
+                player['club_id'] = club_id
                 player['is_admin'] = is_admin
                 # 待考虑的roll back
                 data_handler.fast_write(da_config.DB_LOGIC, player, 'players')
@@ -170,7 +168,7 @@ class Club(models.Model):
                 # result_team = cls.objects.filter(club_id=team_id)
                 # update team players
                 players_ids, admin_id = get_player_from_team(team)
-                Players.get_or_create(admin_id, club=req[0], is_admin=1)
+                Players.get_or_create(admin_id, club=req[0], is_admin=1, club_id=team_id)
                 for account_id in players_ids:
                     Players.get_or_create(account_id)
                 return req[0]

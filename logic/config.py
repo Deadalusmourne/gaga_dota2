@@ -12,7 +12,7 @@ host = '127.0.0.1'
 port = 3306
 db = 'gaga_dota2'
 user = 'root'
-password = '123456'
+password = '111111'
 
 # 循环获取在线人数间隔
 loop_get_cplayers = 300

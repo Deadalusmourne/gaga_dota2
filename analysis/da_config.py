@@ -7,7 +7,7 @@ DA_HOST = '127.0.0.1'
 DA_PORT = 8090
 
 
-FAST_WRITE_URL = "%s:%s/data/fast_write/" % (DA_HOST, DA_PORT)
+FAST_WRITE_URL = "http://%s:%s/data/fast_write/" % (DA_HOST, DA_PORT)
 
 DB_CHOICE = {
     0: 'logic'

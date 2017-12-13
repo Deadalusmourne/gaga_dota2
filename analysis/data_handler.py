@@ -15,6 +15,7 @@ def fast_write(db_type, data_list, table_name):
         'data_list': json.dumps(data_list),
     }
     req = requests.post(url, data=param)
+    print('fast_write req',req)
     return req
 
 

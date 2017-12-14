@@ -171,7 +171,7 @@ class Club(models.Model):
                 Players.get_or_create(admin_id, club=req[0], is_admin=1, club_id=team_id)
                 for account_id in players_ids:
                     Players.get_or_create(account_id)
-                return req[0]
+                return req
 
 
 def get_player_from_team(team):
@@ -227,7 +227,7 @@ class Matches(models.Model):
                     # lobby type instance
                     num_lobby = match.get('lobby_type', -1)
                     lobby = LobbyType.objects.filter(status=int(num_lobby))
-                    match['lobby_type'] = lobby
+                    match['lobby_type'] = lobby[0]
                     # club 增加
                     radiant_team_id = match.get('radiant_team_id', '')
                     dire_team_id = match.get('dire_team_id', '')
@@ -236,8 +236,10 @@ class Matches(models.Model):
                     if not (team1 and team2):
                         team1 = Club.add_one(radiant_team_id)
                         team2 = Club.add_one(dire_team_id)
-                    match['radiant_team'] = team1[0]
-                    match['dire_team'] = team2[0]
+                    if team1:
+                        match['radiant_team'] = team1[0]
+                    if team2:
+                        match['dire_team'] = team2[0]
                     req = cls.objects.update_or_create(match_id=match_id, defaults=match)
                     print(req)
                     MatchToPlayer.create_one_data(req[0], players)

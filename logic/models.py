@@ -77,7 +77,7 @@ class Players(models.Model):
     avatar = models.URLField(default='')
     avatarmedium = models.URLField(default='')
     avatarfull = models.URLField(default='')
-    club = models.ForeignKey(to="Club", null=True, blank=True)
+    club = models.ForeignKey(to="Club", null=True, blank=True, on_delete=None)
     is_admin = models.SmallIntegerField(default=0)
 
 
@@ -198,15 +198,15 @@ series_dict = ((0, 'Non-series'),
 
 
 class Matches(models.Model):
-    match_id = models.IntegerField(unique=True, null=False, db_index=True)
+    match_id = models.BigIntegerField(unique=True, null=False, db_index=True)
     match_seq_num = models.IntegerField(db_index=True)
     start_time = models.FloatField(db_index=True)
     series_id = models.IntegerField()
     series_type = models.SmallIntegerField(choices=series_dict, default=0)
     lobby_type = models.ForeignKey(to="LobbyType")
-    radiant_team = models.ForeignKey(to="Club", related_name='radiant_team') # 若是通过club反向查找match，可以截止club.objects.first().radiant_team
-    dire_team = models.ForeignKey(to="Club", related_name='dire_team')
-    league = models.ForeignKey(to="League", null=True)
+    radiant_team = models.ForeignKey(to="Club", related_name='radiant_team', on_delete=None) # 若是通过club反向查找match，可以截止club.objects.first().radiant_team
+    dire_team = models.ForeignKey(to="Club", related_name='dire_team', on_delete=None)
+    league = models.ForeignKey(to="League", null=True, on_delete=None)
     players = models.TextField()
 
     @classmethod
@@ -234,8 +234,8 @@ class Matches(models.Model):
                     team1 = Club.objects.filter(club_id=int(radiant_team_id))
                     team2 = Club.objects.filter(club_id=int(dire_team_id))
                     if not (team1 and team2):
-                        team1 = Club.add_one(radiant_team_id)
-                        team2 = Club.add_one(dire_team_id)
+                        team1 = Club.add_one(radiant_team_id)[0]
+                        team2 = Club.add_one(dire_team_id)[0]
                     if team1:
                         match['radiant_team'] = team1[0]
                     if team2:
@@ -246,9 +246,9 @@ class Matches(models.Model):
 
 
 class MatchToPlayer(models.Model):
-    player_id = models.ForeignKey(to="Players", to_field="account_id", db_index=True)
-    match_id = models.ForeignKey(to="Matches", to_field="match_id", db_index=True)
-    hero_id = models.ForeignKey(to="Hero", null=True)
+    player_id = models.ForeignKey(to="Players", to_field="account_id", db_index=True, on_delete=None)
+    match_id = models.ForeignKey(to="Matches", to_field="match_id", db_index=True, on_delete=None)
+    hero_id = models.ForeignKey(to="Hero", null=True, on_delete=None)
     player_slot = models.IntegerField()
 
     @classmethod

@@ -11,10 +11,10 @@ def fast_write(db_type, data_list, table_name):
     url = da_config.FAST_WRITE_URL
     param = {
         'db_type': db_type,
-        'table_name': table_name,
-        'data_list': json.dumps(data_list),
+        'coll_name': table_name,
+        'data_list': data_list,
     }
-    req = requests.post(url, data=param)
+    req = requests.post(url, data=json.dumps(param))
     print('fast_write req',req)
     return req
 

@@ -199,7 +199,7 @@ series_dict = ((0, 'Non-series'),
 
 class Matches(models.Model):
     match_id = models.BigIntegerField(unique=True, null=False, db_index=True)
-    match_seq_num = models.IntegerField(db_index=True)
+    match_seq_num = models.BigIntegerField(db_index=True)
     start_time = models.FloatField(db_index=True)
     series_id = models.IntegerField()
     series_type = models.SmallIntegerField(choices=series_dict, default=0)
@@ -237,9 +237,9 @@ class Matches(models.Model):
                         team1 = Club.add_one(radiant_team_id)[0]
                         team2 = Club.add_one(dire_team_id)[0]
                     if team1:
-                        match['radiant_team'] = team1[0]
+                        match['radiant_team'] = team1 if isinstance(team1, Club) else team1[0]
                     if team2:
-                        match['dire_team'] = team2[0]
+                        match['dire_team'] = team2 if isinstance(team2, Club) else team2[0]
                     req = cls.objects.update_or_create(match_id=match_id, defaults=match)
                     print(req)
                     MatchToPlayer.create_one_data(req[0], players)

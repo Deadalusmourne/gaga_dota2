@@ -11,16 +11,16 @@ api = dota2api.Initialise(config.API_TOKEN, language='Zh-cn')
 # with open('ttt.json', 'w') as f:
 #     f.write(json.dumps(req))
 
-req = api.get_league_listing()
-print(req)
-for i in req['leagues']:
-    print(i['name'], i['leagueid'])
+# req = api.get_league_listing()
+# print(req)
+# for i in req['leagues']:
+#     print(i['name'], i['leagueid'])
 
 # req = api.get_top_live_games()
 # print(req)
 
-# req = api.get_match_history(account_id=76561198098649274)
-# print(req)
+req = api.get_match_history(league_id=5637)
+print(req)
 #
 # req = api.get_match_details(match_id=1666453945)
 # print(req)
@@ -31,9 +31,12 @@ for i in req['leagues']:
 
 
 '''
-http://api.steampowered.com/IDOTA2Match_570/GetTeamInfoByTeamID/v1?key=79D1B68E3619897260FA6F5758C96005&team_id=3586790653
+http://api.steampowered.com/IDOTA2Match_570/GetTeamInfoByTeamID/v1?key=79D1B68E3619897260FA6F5758C96005&team_id=1838315
 
 '''
+# req = api.get_team_info_by_team_id(start_at_team_id=1838315, teams_requested=1)
+# result = req
+# print(req)
 
 # ugc_url = "http://api.steampowered.com/ISteamRemoteStorage/GetUGCFileDetails/v1/?key=79D1B68E3619897260FA6F5758C96005&ugcid=46499322609643214"
 #

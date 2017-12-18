@@ -70,7 +70,7 @@ class GameMode(models.Model):
 
 
 class Players(models.Model):
-    account_id = models.IntegerField(unique=True, null=False, db_index=True, primary_key=True)
+    account_id = models.BigIntegerField(unique=True, null=False, db_index=True)
     steamid = models.CharField(max_length=256, default='')
     communityvisibilitystate = models.SmallIntegerField(default=1)
     lastlogoff = models.IntegerField(default=0)
@@ -111,7 +111,7 @@ class Players(models.Model):
                 # 待考虑的roll back
                 data_handler.fast_write(da_config.DB_LOGIC, player, 'players')
                 ##
-                req = cls.objects.get(account_id=account_id)
+                req = cls.objects.filter(account_id=account_id)
         return req
 
 
@@ -170,7 +170,7 @@ class Club(models.Model):
                 players_ids, admin_id = get_player_from_team(team)
                 Players.get_or_create(admin_id, club=req[0], is_admin=1, club_id=team_id)
                 for account_id in players_ids:
-                    Players.get_or_create(account_id)
+                    Players.get_or_create(account_id, club=req[0], club_id=team_id)
                 return req
 
 
@@ -203,10 +203,10 @@ class Matches(models.Model):
     start_time = models.FloatField(db_index=True)
     series_id = models.IntegerField()
     series_type = models.SmallIntegerField(choices=series_dict, default=0)
-    lobby_type = models.ForeignKey(to="LobbyType")
-    radiant_team = models.ForeignKey(to="Club", related_name='radiant_team', on_delete=None) # 若是通过club反向查找match，可以截止club.objects.first().radiant_team
-    dire_team = models.ForeignKey(to="Club", related_name='dire_team', on_delete=None)
-    league = models.ForeignKey(to="League", null=True, on_delete=None)
+    lobby_type = models.ForeignKey(to="LobbyType", on_delete=None, db_constraint=False)
+    radiant_team = models.ForeignKey(to="Club", related_name='radiant_team', on_delete=None, db_constraint=False) # 若是通过club反向查找match，可以截止club.objects.first().radiant_team
+    dire_team = models.ForeignKey(to="Club", related_name='dire_team', on_delete=None, db_constraint=False)
+    league = models.ForeignKey(to="League", null=True, on_delete=None, db_constraint=False)
     players = models.TextField()
 
     @classmethod
@@ -229,8 +229,8 @@ class Matches(models.Model):
                     lobby = LobbyType.objects.filter(status=int(num_lobby))
                     match['lobby_type'] = lobby[0]
                     # club 增加
-                    radiant_team_id = match.get('radiant_team_id', '')
-                    dire_team_id = match.get('dire_team_id', '')
+                    radiant_team_id = match.pop('radiant_team_id')
+                    dire_team_id = match.pop('dire_team_id')
                     team1 = Club.objects.filter(club_id=int(radiant_team_id))
                     team2 = Club.objects.filter(club_id=int(dire_team_id))
                     if not (team1 and team2):
@@ -246,9 +246,9 @@ class Matches(models.Model):
 
 
 class MatchToPlayer(models.Model):
-    player_id = models.ForeignKey(to="Players", to_field="account_id", db_index=True, on_delete=None)
-    match_id = models.ForeignKey(to="Matches", to_field="match_id", db_index=True, on_delete=None)
-    hero_id = models.ForeignKey(to="Hero", null=True, on_delete=None)
+    player_id = models.ForeignKey(to="Players",  db_index=True, on_delete=None, db_constraint=False)
+    match_id = models.ForeignKey(to="Matches",  db_index=True, on_delete=None, db_constraint=False)  # to field 导致这张表的int不够用
+    hero_id = models.ForeignKey(to="Hero", null=True, on_delete=None, db_constraint=False)
     player_slot = models.IntegerField()
 
     @classmethod
@@ -256,17 +256,21 @@ class MatchToPlayer(models.Model):
         print("create_one_data")
         for item in players:
             player_id = item.get("account_id", 4294967295)
-            player_set = Players.objects.filter(account_id=player_id)
             hero = Hero.objects.filter(id=item.get("hero_id", 0))
-            if not player_set:
-                player = Players.get_or_create(player_id)
+            if hero:
+                hero = hero[0]
             else:
-                player = player_set[0]
+                continue
+            player = Players.get_or_create(player_id)
+            if player:
+                player = player if isinstance(player, Players) else player[0]
+            else:
+                continue
             cls.objects.create(**{
                 "player_id": player,
                 "match_id": match,
-                "id": hero,
-                "player_slot": item.get("player_slot", 0)
+                "hero_id": hero,
+                "player_slot": int(item.get("player_slot", 0))
             })
 
     class Meta:

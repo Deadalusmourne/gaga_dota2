@@ -32,8 +32,8 @@ def intime_online_person(requests):
                 count_num = i_data.count_num
                 # date_req = deal_date.timeno_to_date(timeno_one)
                 date_req = timeno_one
-                print('one', count_num, date_req)
                 if count_num and date_req:
+                    date_req = deal_date.timeno_to_date(date_req)
                     players_num_list.append([date_req, count_num])
             if players_num_list:
                 req_final = {'success': 1, 'resp': {'historyData': players_num_list}}
@@ -57,12 +57,13 @@ def get_league_match_by_id(request, league_id):
         print(trigger_league, trigger_match, update_trigger_b)
         if int(trigger_league):
             models.League.update_league()
-        req = models.League.objects.get(leagueid=league_id)
+        req = models.League.objects.filter(leagueid=league_id)
+        req = req[0] if req else []
         if req:
             if int(trigger_match):
                 models.Matches.update_data(league_id)
             matches_req = models.Matches.objects.filter(league=req)
-            return HttpResponse(json.dumps({"succ": 1, "resp": {"league": req, "matches": matches_req}}))
+            matches_req = matches_req[0] if matches_req else []
     return HttpResponse(json.dumps(req_return))
 
 

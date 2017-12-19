@@ -19,10 +19,11 @@ api = dota2api.Initialise(config.API_TOKEN, language='Zh-cn')
 # req = api.get_top_live_games()
 # print(req)
 
-req = api.get_match_history(league_id=5637)
-print(req)
+# req = api.get_match_history(league_id=5637, start_at_match_id=3456535005)
+# req = api.get_match_history(league_id=5582)
+# print(req)
 #
-# req = api.get_match_details(match_id=1666453945)
+# req = api.get_match_details(match_id=3583359836)
 # print(req)
 
 # req = api.get_team_info_by_team_id(start_at_team_id=726228, teams_requested=1)

@@ -15,6 +15,7 @@ url = 'http://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1?
 def loop_current():
     req = requests.get(url)
     req = req.json()
+    print(req)
     resp = req.get('response', '')
     if resp:
         result = resp.get('result', 1)

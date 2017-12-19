@@ -3,6 +3,7 @@ from logic import config
 import requests
 from init_doAPI import get_doAPI
 import json
+import time
 import pycountry
 from analysis import data_handler, da_config
 # Create your models here.
@@ -193,7 +194,7 @@ def get_player_from_team(team):
 
 series_dict = ((0, 'Non-series'),
                 (1, 'BO3'),
-                (1, 'BO5'),
+                (2, 'BO5'),
                 )
 
 
@@ -211,38 +212,56 @@ class Matches(models.Model):
 
     @classmethod
     def update_data(cls, league_id):
+        print('start update league matches', league_id)
         if league_id:
             api = get_doAPI()
-            req = api.get_match_history(league_id=league_id)
-            matches = req.get('matches', []) if req.get('status', 0) else []
-            for match in matches:
-                match_id = match.get('match_id', '')
-                if match_id:
-                    players = match.get('players')
-                    match['players'] = json.dumps(players)
-                    # add league
-                    league_set = League.objects.filter(leagueid=league_id)
-                    league = league_set[0] if league_set else None
-                    match['league'] = league
-                    # lobby type instance
-                    num_lobby = match.get('lobby_type', -1)
-                    lobby = LobbyType.objects.filter(status=int(num_lobby))
-                    match['lobby_type'] = lobby[0]
-                    # club 增加
-                    radiant_team_id = match.pop('radiant_team_id')
-                    dire_team_id = match.pop('dire_team_id')
-                    team1 = Club.objects.filter(club_id=int(radiant_team_id))
-                    team2 = Club.objects.filter(club_id=int(dire_team_id))
-                    if not (team1 and team2):
-                        team1 = Club.add_one(radiant_team_id)[0]
-                        team2 = Club.add_one(dire_team_id)[0]
-                    if team1:
-                        match['radiant_team'] = team1 if isinstance(team1, Club) else team1[0]
-                    if team2:
-                        match['dire_team'] = team2 if isinstance(team2, Club) else team2[0]
-                    req = cls.objects.update_or_create(match_id=match_id, defaults=match)
-                    print(req)
-                    MatchToPlayer.create_one_data(req[0], players)
+            start_at_match_id = ''
+            recheck_count = 0
+            while True:
+                req_api = api.get_match_history(league_id=league_id, start_at_match_id=start_at_match_id)
+                if req_api.get('status', 0):
+                    matches = req_api.get('matches', [])
+                    for match in matches:
+                        time.sleep(2)
+                        match_id = match.get('match_id', '')
+                        if match_id:
+                            players = match.get('players')
+                            match['players'] = json.dumps(players)
+                            # add league
+                            league_set = League.objects.filter(leagueid=league_id)
+                            league = league_set[0] if league_set else None
+                            match['league'] = league
+                            # lobby type instance
+                            num_lobby = match.get('lobby_type', -1)
+                            lobby = LobbyType.objects.filter(status=int(num_lobby))
+                            match['lobby_type'] = lobby[0]
+                            # club 增加
+                            radiant_team_id = match.pop('radiant_team_id')
+                            dire_team_id = match.pop('dire_team_id')
+                            team1 = Club.objects.filter(club_id=int(radiant_team_id))
+                            team2 = Club.objects.filter(club_id=int(dire_team_id))
+                            if not (team1 and team2):
+                                team1 = Club.add_one(radiant_team_id)[0]
+                                team2 = Club.add_one(dire_team_id)[0]
+                            if team1:
+                                match['radiant_team'] = team1 if isinstance(team1, Club) else team1[0]
+                            if team2:
+                                match['dire_team'] = team2 if isinstance(team2, Club) else team2[0]
+                            req = cls.objects.update_or_create(match_id=match_id, defaults=match)
+                            print(req)
+                            MatchToPlayer.create_one_data(req[0], players)
+                    this_num = len(matches)
+                    total_results = req_api.get('total_results', 0)
+                    results_remaining = req_api.get('results_remaining', 0)
+                    start_at_match_id = matches[-1].get('match_id')
+                    if results_remaining == 0:
+                        print('update match done')
+                        break
+                else:
+                    recheck_count += 1
+                    if recheck_count > 3:
+                        raise ValueError('api connect failed')
+
 
 
 class MatchToPlayer(models.Model):
@@ -266,7 +285,7 @@ class MatchToPlayer(models.Model):
                 player = player if isinstance(player, Players) else player[0]
             else:
                 continue
-            cls.objects.create(**{
+            cls.objects.get_or_create(**{
                 "player_id": player,
                 "match_id": match,
                 "hero_id": hero,

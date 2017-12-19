@@ -21,11 +21,9 @@ def date_to_timeno(date_str, format_str='%Y-%m-%d %H:%M:%S'):
 
 
 def timeno_to_date(timeno, format_str='%Y-%m-%d %H:%M:%S'):
-    if isinstance(timeno, float):
-        try:
-            return time.strptime(str(timeno), format_str)
-        except ValueError:
-            return ''
+    time_local = time.localtime(timeno)
+    dt = time.strftime(format_str, time_local)
+    return dt
 
 
 # print(date_to_timeno('2017-02-12 12:12:12'))
